@@ -20,7 +20,7 @@ type DirSize uint64
 func (s FileSize) SizeStr() string {
 	switch {
 	case s < 1024:
-		return fmt.Sprintf("%v bytes", s)
+		return fmt.Sprintf("%v B", s)
 	case s >= 1024 && s < 1024*1024:
 		return fmt.Sprintf("%0.2f KB", float64(s)/1024)
 	case s >= 1024*1024 && s < 1024*1024*1024:
@@ -90,5 +90,6 @@ var tmpl *template.Template
 func main() {
 	tmpl = template.Must(template.ParseFiles("template.html"))
 	http.HandleFunc("/{path...}", servePath)
+	http.HandleFunc("/__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }

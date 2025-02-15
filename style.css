@@ -1,0 +1,41 @@
+html {
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+th {
+    text-align: left;
+    color: #5c5c5c;
+}
+
+.td-icon svg {
+    height: 16px;
+    fill: rgba(3, 47, 98, 0.5);
+    padding-right: 0.5em;
+    vertical-align: text-top;
+}
+
+.td-name a {
+    color: #0366d6;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    display: block;
+    text-decoration: none;
+}
+
+.cell-size {
+    text-align: right;
+}
+
+.td-name {
+    min-width: 30ch;
+}
+
+.td-mtime {
+    min-width: 20ch;
+}
+
+.td-size {
+    text-align: right;
+}
