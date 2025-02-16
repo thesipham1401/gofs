@@ -1,0 +1,18 @@
+{{define "title"}}
+Confirm deletion - gofs
+{{end}}
+
+{{define "content"}}
+<form action="/delete" method="post">
+    <input type="hidden" name="path" value="{{.Path}}">
+    <div>Do you want to delete the below files/folders?</div>
+    <div>
+        <ul>
+            {{range .Names}}
+            <li>.</li>
+            {{end}}
+        </ul>
+    </div>
+    <input type="submit" value="Yes"><input type="submit" value="No">
+</form>
+{{end}}

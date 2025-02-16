@@ -1,0 +1,49 @@
+{{define "title"}}
+Index of /{{if ne .Path "."}}{{.Path}}{{end}} - gofs
+{{end}}
+
+{{define "content"}}
+<form class="index-page" method="post" action="confirm">
+    <div class="actions">
+        <input class="new-folder-btn" type="submit" name="__gofs-new-folder" value="New Folder">
+        <input class="arch-btn" type="submit" name="__gofs-archive" value="Archive">
+        <input class="del-btn" type="submit" name="__gofs-delete" value="Delete">
+        <input type="hidden" name="path" value="{{.Path}}">
+    </div>
+    <table class="paths-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="cell-name" colspan="2">Name</th>
+                <th class="cell-mtime">Last Modified</th>
+                <th class="cell-size">Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Items}}
+            <tr>
+                {{if $.AllowWrite}}
+                <td class="td-checkbox"><input type="checkbox" name="{{.Name}}" id="{{.Name}}"></td>
+                {{end}}
+                {{if .IsDir}}
+                <td class="td-icon"><svg height="16" viewBox="0 0 14 16" width="14">
+                        <path fill-rule="evenodd"
+                            d="M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM6 4H1V3h5v1z">
+                        </path>
+                    </svg></td>
+                {{else}}
+                <td class="td-icon"><svg height="16" viewBox="0 0 12 16" width="12">
+                        <path fill-rule="evenodd"
+                            d="M6 5H2V4h4v1zM2 8h7V7H2v1zm0 2h7V9H2v1zm0 2h7v-1H2v1zm10-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5z">
+                        </path>
+                    </svg></td>
+                {{end}}
+                <td class="td-name"><a href="/{{$.Path}}/{{.Name}}">{{.Name}}</a></td>
+                <td class="td-mtime">{{.LastModified.Format "2006-01-02 15:04"}}</td>
+                <td class="td-size">{{.Size.SizeStr}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</form>
+{{end}}

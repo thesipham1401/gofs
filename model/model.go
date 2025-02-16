@@ -38,25 +38,51 @@ type Item struct {
 	IsDir        bool
 }
 
-type Model struct {
-	Path  string
-	Items []Item
+type FilesPageModel struct {
+	Path       Path
+	Items      []Item
+	AllowWrite bool
+}
+
+type DeletePageModel struct {
+	Path  Path
+	Names []string
+}
+
+type ArchivePageModel struct {
+	Path  Path
+	Names []string
+}
+
+type NewFolderPageModel struct {
+	Path Path
 }
 
 type ParentItem struct {
 	Name string
-	Path string
+	Path Path
 }
 
-func (model Model) Parents() []ParentItem {
+type Path string
+
+func (p Path) Parents() []ParentItem {
 	items := make([]ParentItem, 0)
-	for parent := path.Dir(model.Path); parent != "."; parent = path.Dir(parent) {
-		items = append(items, ParentItem{Path: parent, Name: path.Base(parent)})
+	for parent := path.Dir(string(p)); parent != "."; parent = path.Dir(parent) {
+		items = append(items, ParentItem{Path: Path(parent), Name: path.Base(parent)})
 	}
 	slices.Reverse(items)
 	return items
 }
 
-func (model Model) CurrentDir() string {
-	return path.Base(model.Path)
+func (p Path) CurrentDir() string {
+	return path.Base(string(p))
 }
+
+// func (model FilesPageModel) Parents() []ParentItem {
+// 	items := make([]ParentItem, 0)
+// 	for parent := path.Dir(model.Path); parent != "."; parent = path.Dir(parent) {
+// 		items = append(items, ParentItem{Path: parent, Name: path.Base(parent)})
+// 	}
+// 	slices.Reverse(items)
+// 	return items
+// }

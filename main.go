@@ -10,7 +10,13 @@ import (
 	"strings"
 
 	"github.com/ndtoan96/gofs/model"
+	"github.com/spf13/pflag"
 )
+
+var tmpl map[string]*template.Template
+var delTmpl *template.Template
+var allowWrite bool
+var port int
 
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
@@ -45,19 +51,61 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 				items = append(items, model.Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: model.FileSize(info.Size())})
 			}
 		}
-		tmpl.Execute(w, model.Model{Path: path, Items: items})
+		tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite})
 	} else {
 		http.ServeFile(w, r, path)
 	}
 }
 
-var tmpl *template.Template
+func confirmAction(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	names := make([]string, 0)
+	for k, v := range r.PostForm {
+		if v[0] == "on" {
+			names = append(names, k)
+		}
+	}
+	currentDir := r.FormValue("path")
+	if r.FormValue("__gofs-delete") == "Delete" {
+		delTmpl.Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
+	} else if r.FormValue("__gofs-archive") == "Archive" {
+		tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
+	} else if r.FormValue("__gofs-new-folder") == "New Folder" {
+		tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+}
+
+func delete(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func newFolder(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func archive(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func main() {
-	tmpl = template.Must(template.ParseFiles("template.html"))
-	http.HandleFunc("/{path...}", servePath)
-	http.HandleFunc("/__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
-	port := 8080
+	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
+	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
+	pflag.Parse()
+
+	tmpl = make(map[string]*template.Template)
+	delTmpl = template.Must(template.ParseFiles("templates/layout.html", "templates/delete.html"))
+	tmpl["new-folder"] = template.Must(template.ParseFiles("templates/layout.html", "templates/new-folder.html"))
+	tmpl["archive"] = template.Must(template.ParseFiles("templates/layout.html", "templates/archive.html"))
+	tmpl["files"] = template.Must(template.ParseFiles("templates/layout.html", "templates/files.html"))
+
+	http.HandleFunc("GET /{path...}", servePath)
+	http.HandleFunc("POST /confirm", confirmAction)
+	http.HandleFunc("POST /delete", delete)
+	http.HandleFunc("POST /new_folder", newFolder)
+	http.HandleFunc("POST /archive", archive)
+	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
 	log.Printf("Starting server at localhost:%v\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%v", port), nil))
 }
