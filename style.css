@@ -67,3 +67,8 @@ th {
     background-color: rgb(161, 0, 0);
     color: white;
 }
+
+ul {
+    list-style-type: none;
+    font-style: italic;
+}

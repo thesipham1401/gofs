@@ -9,7 +9,7 @@ Confirm deletion - gofs
     <div>
         <ul>
             {{range .Names}}
-            <li>.</li>
+            <li>{{.}}</li><input type="hidden" name="items" value="{{.}}">
             {{end}}
         </ul>
     </div>

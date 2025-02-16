@@ -77,12 +77,3 @@ func (p Path) Parents() []ParentItem {
 func (p Path) CurrentDir() string {
 	return path.Base(string(p))
 }
-
-// func (model FilesPageModel) Parents() []ParentItem {
-// 	items := make([]ParentItem, 0)
-// 	for parent := path.Dir(model.Path); parent != "."; parent = path.Dir(parent) {
-// 		items = append(items, ParentItem{Path: parent, Name: path.Base(parent)})
-// 	}
-// 	slices.Reverse(items)
-// 	return items
-// }

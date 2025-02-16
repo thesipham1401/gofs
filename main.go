@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 
 	"strings"
 
@@ -78,7 +79,13 @@ func confirmAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
-
+	r.ParseForm()
+	p := r.FormValue("path")
+	items := r.PostForm["items"]
+	for _, item := range items {
+		os.RemoveAll(path.Join(p, item))
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
 func newFolder(w http.ResponseWriter, r *http.Request) {
