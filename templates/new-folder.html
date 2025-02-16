@@ -1,8 +1,15 @@
 {{define "title"}}
-Confirm new folder - gofs
+Create new folder - gofs
 {{end}}
 
-
 {{define "content"}}
-new folder
+<form action="/new-folder" method="post">
+    <input type="hidden" name="path" value="{{.Path}}">
+    <div>
+        <label for="name">Folder name</label>
+        <input type="text" name="name" id="name">
+    </div>
+    <input type="submit" name="submit" value="Create">
+    <input type="submit" name="submit" value="Cancel">
+</form>
 {{end}}

@@ -73,6 +73,8 @@ func confirmAction(w http.ResponseWriter, r *http.Request) {
 		tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
 	} else if r.FormValue("__gofs-new-folder") == "New Folder" {
 		tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+	} else if r.FormValue("__gofs-upload") == "Upload Files" {
+		tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -81,18 +83,25 @@ func confirmAction(w http.ResponseWriter, r *http.Request) {
 func delete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	p := r.FormValue("path")
-	items := r.PostForm["items"]
-	for _, item := range items {
-		err := os.RemoveAll(path.Join(p, item))
-		if err != nil {
-			log.Println("[ERROR]", err)
+	if r.FormValue("submit") == "Yes" {
+		items := r.PostForm["items"]
+		for _, item := range items {
+			err := os.RemoveAll(path.Join(p, item))
+			if err != nil {
+				log.Println("[ERROR]", err)
+			}
 		}
 	}
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
 func newFolder(w http.ResponseWriter, r *http.Request) {
-
+	p := r.FormValue("path")
+	name := r.FormValue("name")
+	if r.FormValue("submit") == "Create" {
+		os.Mkdir(path.Join(p, name), 0666)
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
 func archive(w http.ResponseWriter, r *http.Request) {
@@ -109,11 +118,12 @@ func main() {
 	tmpl["new-folder"] = template.Must(template.ParseFiles("templates/layout.html", "templates/new-folder.html"))
 	tmpl["archive"] = template.Must(template.ParseFiles("templates/layout.html", "templates/archive.html"))
 	tmpl["files"] = template.Must(template.ParseFiles("templates/layout.html", "templates/files.html"))
+	tmpl["upload"] = template.Must(template.ParseFiles("templates/layout.html", "templates/upload.html"))
 
 	http.HandleFunc("GET /{path...}", servePath)
 	http.HandleFunc("POST /confirm", confirmAction)
 	http.HandleFunc("POST /delete", delete)
-	http.HandleFunc("POST /new_folder", newFolder)
+	http.HandleFunc("POST /new-folder", newFolder)
 	http.HandleFunc("POST /archive", archive)
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
 	log.Printf("Starting server at localhost:%v\n", port)

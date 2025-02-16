@@ -6,6 +6,7 @@ Index of /{{if ne .Path "."}}{{.Path}}{{end}} - gofs
 <form class="index-page" method="post" action="/confirm">
     <div class="actions">
         <input class="new-folder-btn" type="submit" name="__gofs-new-folder" value="New Folder">
+        <input class="upload-btn" type="submit" name="__gofs-upload" value="Upload Files">
         <input class="arch-btn" type="submit" name="__gofs-archive" value="Archive">
         <input class="del-btn" type="submit" name="__gofs-delete" value="Delete">
         <input type="hidden" name="path" value="{{.Path}}">
