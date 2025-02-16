@@ -8,6 +8,16 @@ th {
     color: #5c5c5c;
 }
 
+.breadcrumb svg {
+    height: 100%;
+    fill: rgba(3, 47, 98, 0.5);
+}
+
+.breadcrumb>a {
+    color: #0366d6;
+    text-decoration: none;
+}
+
 .td-icon svg {
     height: 16px;
     fill: rgba(3, 47, 98, 0.5);

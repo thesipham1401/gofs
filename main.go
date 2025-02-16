@@ -6,45 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	"strings"
-	"time"
+
+	"github.com/ndtoan96/gofs/model"
 )
-
-type ISize interface {
-	SizeStr() string
-}
-
-type FileSize int64
-type DirSize uint64
-
-func (s FileSize) SizeStr() string {
-	switch {
-	case s < 1024:
-		return fmt.Sprintf("%v B", s)
-	case s >= 1024 && s < 1024*1024:
-		return fmt.Sprintf("%0.2f KB", float64(s)/1024)
-	case s >= 1024*1024 && s < 1024*1024*1024:
-		return fmt.Sprintf("%0.2f MB", float64(s)/(1024*1024))
-	default:
-		return fmt.Sprintf("%0.2f GB", float64(s)/(1024*1024*1024))
-	}
-}
-
-func (s DirSize) SizeStr() string {
-	return fmt.Sprintf("%v items", s)
-}
-
-type Item struct {
-	Name         string
-	LastModified time.Time
-	Size         ISize
-	IsDir        bool
-}
-
-type Model struct {
-	Path  string
-	Items []Item
-}
 
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
@@ -69,17 +35,17 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Serve directory
-		items := make([]Item, 0)
+		items := make([]model.Item, 0)
 		for _, e := range dir {
 			info, _ := e.Info()
 			if e.IsDir() {
 				d, _ := os.ReadDir(e.Name())
-				items = append(items, Item{IsDir: true, Name: e.Name(), LastModified: info.ModTime(), Size: DirSize(len(d))})
+				items = append(items, model.Item{IsDir: true, Name: e.Name(), LastModified: info.ModTime(), Size: model.DirSize(len(d))})
 			} else {
-				items = append(items, Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: FileSize(info.Size())})
+				items = append(items, model.Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: model.FileSize(info.Size())})
 			}
 		}
-		tmpl.Execute(w, Model{Path: path, Items: items})
+		tmpl.Execute(w, model.Model{Path: path, Items: items})
 	} else {
 		http.ServeFile(w, r, path)
 	}
@@ -91,5 +57,7 @@ func main() {
 	tmpl = template.Must(template.ParseFiles("template.html"))
 	http.HandleFunc("/{path...}", servePath)
 	http.HandleFunc("/__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	port := 8080
+	log.Printf("Starting server at localhost:%v\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%v", port), nil))
 }
