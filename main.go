@@ -83,7 +83,10 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	p := r.FormValue("path")
 	items := r.PostForm["items"]
 	for _, item := range items {
-		os.RemoveAll(path.Join(p, item))
+		err := os.RemoveAll(path.Join(p, item))
+		if err != nil {
+			log.Println("[ERROR]", err)
+		}
 	}
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
