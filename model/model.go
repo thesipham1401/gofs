@@ -58,6 +58,11 @@ type NewFolderPageModel struct {
 	Path Path
 }
 
+type RenamePageModel struct {
+	Path     Path
+	OldNames []string
+}
+
 type ParentItem struct {
 	Name string
 	Path Path

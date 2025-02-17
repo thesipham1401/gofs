@@ -71,13 +71,27 @@ func confirmAction(w http.ResponseWriter, r *http.Request) {
 	currentDir := r.FormValue("path")
 	var err error = nil
 	if r.FormValue("__gofs-delete") == "Delete" {
-		err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
+		if len(names) > 0 {
+			err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
+		} else {
+			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+		}
 	} else if r.FormValue("__gofs-archive") == "Archive" {
-		err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
+		if len(names) > 0 {
+			err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
+		} else {
+			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+		}
 	} else if r.FormValue("__gofs-new-folder") == "New Folder" {
 		err = tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
 	} else if r.FormValue("__gofs-upload") == "Upload Files" {
 		err = tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+	} else if r.FormValue("__gofs-rename") == "Rename" {
+		if len(names) > 0 {
+			err = tmpl["rename"].Execute(w, model.RenamePageModel{Path: model.Path(currentDir), OldNames: names})
+		} else {
+			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+		}
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -114,6 +128,28 @@ func archive(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func rename(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	p := r.FormValue("path")
+	oldNames := make([]string, 0)
+	newNames := make([]string, 0)
+	for k, v := range r.PostForm {
+		if strings.HasPrefix(k, "oldname-") {
+			oldNames = append(oldNames, strings.TrimPrefix(k, "oldname-"))
+			newNames = append(newNames, v[0])
+		}
+	}
+	if r.FormValue("submit") == "Rename" {
+		for i, oldName := range oldNames {
+			newName := newNames[i]
+			if err := os.Rename(path.Join(p, oldName), path.Join(p, newName)); err != nil {
+				log.Println("[ERROR]", err)
+			}
+		}
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
+}
+
 func main() {
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
@@ -125,12 +161,14 @@ func main() {
 	tmpl["archive"] = template.Must(template.ParseFiles("templates/layout.html", "templates/archive.html"))
 	tmpl["files"] = template.Must(template.ParseFiles("templates/layout.html", "templates/files.html"))
 	tmpl["upload"] = template.Must(template.ParseFiles("templates/layout.html", "templates/upload.html"))
+	tmpl["rename"] = template.Must(template.ParseFiles("templates/layout.html", "templates/rename.html"))
 
 	http.HandleFunc("GET /{path...}", servePath)
 	http.HandleFunc("POST /confirm", confirmAction)
 	http.HandleFunc("POST /delete", delete)
 	http.HandleFunc("POST /new-folder", newFolder)
 	http.HandleFunc("POST /archive", archive)
+	http.HandleFunc("POST /rename", rename)
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
 	log.Printf("Starting server at localhost:%v\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%v", port), nil))

@@ -72,3 +72,12 @@ ul {
     list-style-type: none;
     font-style: italic;
 }
+
+.rename-arrow svg {
+    height: 0.7em;
+    width: 2ch;
+}
+
+td > pre {
+    margin: 0.2em;
+}
