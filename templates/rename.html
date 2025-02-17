@@ -1,0 +1,13 @@
+{{define "title"}}
+Rename - gofs
+{{end}}
+
+{{define "content"}}
+<form action="/rename" method="post">
+    <input type="hidden" name="path" value="{{.Path}}">
+    <label for="name">New name</label>
+    <input type="text" name="name" id="name">
+    <input type="submit" value="Rename">
+    <input type="submit" value="Cancel">
+</form>
+{{end}}

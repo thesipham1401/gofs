@@ -15,7 +15,6 @@ import (
 )
 
 var tmpl map[string]*template.Template
-var delTmpl *template.Template
 var allowWrite bool
 var port int
 
@@ -52,7 +51,10 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 				items = append(items, model.Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: model.FileSize(info.Size())})
 			}
 		}
-		tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite})
+		if err := tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite}); err != nil {
+			log.Fatalln("[ERROR]", err)
+		}
+
 	} else {
 		http.ServeFile(w, r, path)
 	}
@@ -67,16 +69,20 @@ func confirmAction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	currentDir := r.FormValue("path")
+	var err error = nil
 	if r.FormValue("__gofs-delete") == "Delete" {
-		delTmpl.Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
+		err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
 	} else if r.FormValue("__gofs-archive") == "Archive" {
-		tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
+		err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
 	} else if r.FormValue("__gofs-new-folder") == "New Folder" {
-		tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+		err = tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
 	} else if r.FormValue("__gofs-upload") == "Upload Files" {
-		tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+		err = tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
+	}
+	if err != nil {
+		log.Fatalln("[ERROR]", err)
 	}
 }
 
@@ -114,7 +120,7 @@ func main() {
 	pflag.Parse()
 
 	tmpl = make(map[string]*template.Template)
-	delTmpl = template.Must(template.ParseFiles("templates/layout.html", "templates/delete.html"))
+	tmpl["delete"] = template.Must(template.ParseFiles("templates/layout.html", "templates/delete.html"))
 	tmpl["new-folder"] = template.Must(template.ParseFiles("templates/layout.html", "templates/new-folder.html"))
 	tmpl["archive"] = template.Must(template.ParseFiles("templates/layout.html", "templates/archive.html"))
 	tmpl["files"] = template.Must(template.ParseFiles("templates/layout.html", "templates/files.html"))

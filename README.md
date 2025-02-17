@@ -1,4 +1,4 @@
-# GOFS
+# Gofs
 
 A simple static file server inspired by [dufs](https://github.com/sigoden/dufs).
 `gofs` uses zero JavaScript and so it can function properly in browsers with
