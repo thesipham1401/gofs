@@ -1,7 +1,25 @@
 {{define "title"}}
-Confirm archiving - gofs
+Archiving - gofs
 {{end}}
 
 {{define "content"}}
-archive
+<form action="/archive" method="post">
+    <input type="hidden" name="path" value="{{.Path}}">
+    <div>
+    <label for="name">Archive name:</label>
+    <input type="text" name="name" id="name"><span>.zip</span>
+    </div>
+    <div>
+        Files/folders to archive:
+        <ul>
+            {{range .Names}}
+            <li>
+                <pre>{{.}}</pre><input type="hidden" name="items" value="{{.}}">
+            </li>
+            {{end}}
+        </ul>
+    </div>
+    <input type="submit" name="submit" value="Archive">
+    <input type="submit" name="submit" value="Cancel">
+</form>
 {{end}}

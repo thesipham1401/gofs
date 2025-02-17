@@ -10,7 +10,8 @@ limited capabilites (such as one in an e-reader device).
 - [x] New folder
 - [x] Delete files/folders
 - [ ] Archive
-- [ ] Rename
+- [x] Rename
 - [ ] Upload files
 - [ ] Root flag
 - [ ] Searching
+- [ ] Copy/Paste

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -125,7 +127,67 @@ func newFolder(w http.ResponseWriter, r *http.Request) {
 }
 
 func archive(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	p := r.FormValue("path")
+	name := r.FormValue("name")
+	name += ".zip"
+	if r.FormValue("submit") == "Archive" {
+		items := r.PostForm["items"]
+		err := zipFilesAndFolders(p, name, items)
+		if err != nil {
+			log.Println("[ERROR]", err)
+		}
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
+}
 
+func zipFilesAndFolders(dir string, output string, items []string) error {
+	archive, err := os.Create(path.Join(dir, output))
+	if err != nil {
+		return err
+	}
+	defer archive.Close()
+	zipWriter := zip.NewWriter(archive)
+	defer zipWriter.Close()
+	for len(items) > 0 {
+		item := items[0]
+		items = items[1:]
+		item_path := path.Join(dir, item)
+		info, err := os.Stat(item_path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			dirEntry, err := os.ReadDir(item_path)
+			if err != nil {
+				return err
+			}
+			if len(dirEntry) == 0 {
+				if _, err := zipWriter.Create(item + "/"); err != nil {
+					return err
+				}
+			} else {
+				for _, sub := range dirEntry {
+					items = append(items, path.Join(item, sub.Name()))
+				}
+			}
+
+		} else {
+			f, err := os.Open(item_path)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			w, err := zipWriter.Create(item)
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(w, f); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func rename(w http.ResponseWriter, r *http.Request) {
