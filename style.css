@@ -23,7 +23,7 @@ th {
 }
 
 .td-icon svg {
-    height: 16px;
+    height: 1em;
     fill: rgba(3, 47, 98, 0.5);
     padding-right: 0.5em;
     vertical-align: text-top;
@@ -94,8 +94,14 @@ form.upload-form {
 }
 
 .select-icon svg {
-    height: 20px;
+    height: 1.2em;
     fill: rgba(3, 47, 98, 0.5);
     padding-right: 0.5em;
     vertical-align: text-top;
+}
+
+.copy-paste svg {
+    height: 1.5em;
+    width: 1.5em;
+    align-items: center;
 }

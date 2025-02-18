@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/ndtoan96/gofs/model"
+	cp "github.com/otiai10/copy"
 	"github.com/spf13/pflag"
 )
 
@@ -99,19 +100,16 @@ func action(w http.ResponseWriter, r *http.Request) {
 		} else if len(names) == 1 {
 			item := names[0]
 			itemPath := path.Join(p, item)
-			stat, err := os.Stat(itemPath)
+			var stat os.FileInfo
+			stat, err = os.Stat(itemPath)
 			if err != nil {
-				log.Println("[ERROR]", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+				break
 			}
 			if stat.IsDir() {
 				var buf bytes.Buffer
 				err = zipFilesAndFolders(&buf, p, names)
 				if err != nil {
-					log.Println("[ERROR]", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
+					break
 				}
 				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v.zip", item))
 				w.Header().Set("Content-Type", "application/zip")
@@ -124,9 +122,7 @@ func action(w http.ResponseWriter, r *http.Request) {
 			var buf bytes.Buffer
 			err = zipFilesAndFolders(&buf, p, names)
 			if err != nil {
-				log.Println("[ERROR]", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+				break
 			}
 			zipName := path.Base(p)
 			if zipName == "" || zipName == "." {
@@ -136,6 +132,43 @@ func action(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/zip")
 			io.Copy(w, &buf)
 		}
+	case "copy":
+		if len(names) > 0 {
+			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
+			encodedNames := strings.Join(names, "!$!")
+			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
+			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+		}
+	case "paste":
+		var cpdir *http.Cookie
+		cpdir, err = r.Cookie("cpdir")
+		if err != nil {
+			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+			return
+		}
+		var encodedNames *http.Cookie
+		encodedNames, err = r.Cookie("cpitems")
+		if err != nil {
+			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+			return
+		}
+		decodedNames := strings.Split(encodedNames.Value, "!$!")
+		for _, name := range decodedNames {
+			srcPath := path.Join(cpdir.Value, name)
+			destPath := path.Join(p, name)
+			_, err = os.Stat(destPath)
+			for !os.IsNotExist(err) {
+				ext := path.Ext(destPath)
+				destPath = path.Join(p, strings.TrimSuffix(path.Base(destPath), ext)+"_copy"+ext)
+				_, err = os.Stat(destPath)
+			}
+			err = nil
+			// Cannot copy a folder into itself
+			if !strings.HasPrefix(destPath, srcPath) {
+				cp.Copy(srcPath, destPath)
+			}
+		}
+		http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}
