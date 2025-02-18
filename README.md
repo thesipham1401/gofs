@@ -12,7 +12,7 @@ limited capabilites (such as one in an e-reader device).
 - [x] Archive
 - [x] Rename
 - [x] Upload files
-- [ ] Zip download
+- [x] Download
 - [ ] Root flag
 - [ ] Searching
 - [ ] Copy/Paste

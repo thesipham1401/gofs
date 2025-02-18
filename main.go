@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
 	"html/template"
 	"io"
@@ -65,37 +66,77 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 func action(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	names := r.PostForm["select"]
-	currentDir := r.FormValue("path")
+	p := r.FormValue("path")
 	var err error = nil
 	action := r.FormValue("action")
 	switch action {
 	case "delete":
 		if len(names) > 0 {
-			err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
+			err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(p), Names: names})
 		} else {
-			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
 	case "archive":
 		if len(names) > 0 {
-			err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
+			err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(p), Names: names})
 		} else {
-			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
 	case "new-folder":
-		err = tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+		err = tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(p)})
 	case "upload":
-		err = tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
+		err = tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(p)})
 	case "rename":
 		if len(names) > 0 {
-			err = tmpl["rename"].Execute(w, model.RenamePageModel{Path: model.Path(currentDir), OldNames: names})
+			err = tmpl["rename"].Execute(w, model.RenamePageModel{Path: model.Path(p), OldNames: names})
 		} else {
-			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
+		}
+	case "download":
+		if len(names) == 0 {
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
+		} else if len(names) == 1 {
+			item := names[0]
+			itemPath := path.Join(p, item)
+			stat, err := os.Stat(itemPath)
+			if err != nil {
+				log.Println("[ERROR]", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			if stat.IsDir() {
+				var buf bytes.Buffer
+				err = zipFilesAndFolders(&buf, p, names)
+				if err != nil {
+					log.Println("[ERROR]", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v.zip", item))
+				w.Header().Set("Content-Type", "application/zip")
+				io.Copy(w, &buf)
+			} else {
+				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", item))
+				http.ServeFile(w, r, itemPath)
+			}
+		} else {
+			var buf bytes.Buffer
+			err = zipFilesAndFolders(&buf, p, names)
+			if err != nil {
+				log.Println("[ERROR]", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v.zip", path.Base(p)))
+			w.Header().Set("Content-Type", "application/zip")
+			io.Copy(w, &buf)
 		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	if err != nil {
-		log.Fatalln("[ERROR]", err)
+		log.Println("[ERROR]", err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
