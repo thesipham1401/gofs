@@ -11,7 +11,8 @@ limited capabilites (such as one in an e-reader device).
 - [x] Delete files/folders
 - [x] Archive
 - [x] Rename
-- [ ] Upload files
+- [x] Upload files
+- [ ] Zip download
 - [ ] Root flag
 - [ ] Searching
 - [ ] Copy/Paste
