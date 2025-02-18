@@ -62,39 +62,36 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func confirmAction(w http.ResponseWriter, r *http.Request) {
+func action(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	names := make([]string, 0)
-	for k, v := range r.PostForm {
-		if v[0] == "on" {
-			names = append(names, k)
-		}
-	}
+	names := r.PostForm["select"]
 	currentDir := r.FormValue("path")
 	var err error = nil
-	if r.FormValue("__gofs-delete") == "Delete" {
+	action := r.FormValue("action")
+	switch action {
+	case "delete":
 		if len(names) > 0 {
 			err = tmpl["delete"].Execute(w, model.DeletePageModel{Path: model.Path(currentDir), Names: names})
 		} else {
 			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
 		}
-	} else if r.FormValue("__gofs-archive") == "Archive" {
+	case "archive":
 		if len(names) > 0 {
 			err = tmpl["archive"].Execute(w, model.ArchivePageModel{Path: model.Path(currentDir), Names: names})
 		} else {
 			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
 		}
-	} else if r.FormValue("__gofs-new-folder") == "New Folder" {
+	case "new-folder":
 		err = tmpl["new-folder"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
-	} else if r.FormValue("__gofs-upload") == "Upload Files" {
+	case "upload":
 		err = tmpl["upload"].Execute(w, model.NewFolderPageModel{Path: model.Path(currentDir)})
-	} else if r.FormValue("__gofs-rename") == "Rename" {
+	case "rename":
 		if len(names) > 0 {
 			err = tmpl["rename"].Execute(w, model.RenamePageModel{Path: model.Path(currentDir), OldNames: names})
 		} else {
 			http.Redirect(w, r, currentDir, http.StatusMovedPermanently)
 		}
-	} else {
+	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	if err != nil {
@@ -133,7 +130,12 @@ func archive(w http.ResponseWriter, r *http.Request) {
 	name += ".zip"
 	if r.FormValue("submit") == "Archive" {
 		items := r.PostForm["items"]
-		err := zipFilesAndFolders(p, name, items)
+		archive, err := os.Create(path.Join(p, name))
+		if err != nil {
+			log.Println("[ERROR]", err)
+		}
+		defer archive.Close()
+		err = zipFilesAndFolders(archive, p, items)
 		if err != nil {
 			log.Println("[ERROR]", err)
 		}
@@ -141,13 +143,8 @@ func archive(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
-func zipFilesAndFolders(dir string, output string, items []string) error {
-	archive, err := os.Create(path.Join(dir, output))
-	if err != nil {
-		return err
-	}
-	defer archive.Close()
-	zipWriter := zip.NewWriter(archive)
+func zipFilesAndFolders(writer io.Writer, dir string, items []string) error {
+	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
 	for len(items) > 0 {
 		item := items[0]
@@ -204,7 +201,10 @@ func rename(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("submit") == "Rename" {
 		for i, oldName := range oldNames {
 			newName := newNames[i]
-			if err := os.Rename(path.Join(p, oldName), path.Join(p, newName)); err != nil {
+			oldNamePath := path.Join(p, oldName)
+			newNamePath := path.Join(p, newName)
+			log.Printf("[INFO] Rename `%v` -> `%v`", oldNamePath, newNamePath)
+			if err := os.Rename(oldNamePath, newNamePath); err != nil {
 				log.Println("[ERROR]", err)
 			}
 		}
@@ -217,7 +217,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("submit") == "Upload" {
 		for _, f := range r.MultipartForm.File["files"] {
 			filePath := path.Join(p, f.Filename)
-			log.Println("[INFO] Create", filePath)
+			log.Printf("[INFO] Upload `%v`\n", filePath)
 			w, err := os.Create(filePath)
 			if err != nil {
 				log.Println("[ERROR]", err)
@@ -251,7 +251,7 @@ func main() {
 	tmpl["rename"] = template.Must(template.ParseFiles("templates/layout.html", "templates/rename.html"))
 
 	http.HandleFunc("GET /{path...}", servePath)
-	http.HandleFunc("POST /confirm", confirmAction)
+	http.HandleFunc("POST /action", action)
 	http.HandleFunc("POST /delete", delete)
 	http.HandleFunc("POST /new-folder", newFolder)
 	http.HandleFunc("POST /archive", archive)
