@@ -9,7 +9,7 @@ limited capabilites (such as one in an e-reader device).
 - [x] Serve static files
 - [x] New folder
 - [x] Delete files/folders
-- [ ] Archive
+- [x] Archive
 - [x] Rename
 - [ ] Upload files
 - [ ] Root flag

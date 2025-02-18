@@ -3,7 +3,10 @@ Upload files - gofs
 {{end}}
 
 {{define "content"}}
-<form action="/upload" method="post">
-
+<form class="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="path" value="{{.Path}}">
+    <input type="file" name="files" multiple="true" id="files">
+    <input type="submit" name="submit" value="Upload">
+    <input type="submit" name="submit" value="Cancel">
 </form>
 {{end}}

@@ -212,6 +212,31 @@ func rename(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
+func upload(w http.ResponseWriter, r *http.Request) {
+	p := r.FormValue("path")
+	if r.FormValue("submit") == "Upload" {
+		for _, f := range r.MultipartForm.File["files"] {
+			filePath := path.Join(p, f.Filename)
+			log.Println("[INFO] Create", filePath)
+			w, err := os.Create(filePath)
+			if err != nil {
+				log.Println("[ERROR]", err)
+			}
+			defer w.Close()
+			r, err := f.Open()
+			if err != nil {
+				log.Println("[ERROR]", err)
+			}
+			defer r.Close()
+			_, err = io.Copy(w, r)
+			if err != nil {
+				log.Println("[ERROR]", err)
+			}
+		}
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
+}
+
 func main() {
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
@@ -231,6 +256,7 @@ func main() {
 	http.HandleFunc("POST /new-folder", newFolder)
 	http.HandleFunc("POST /archive", archive)
 	http.HandleFunc("POST /rename", rename)
+	http.HandleFunc("POST /upload", upload)
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
 	log.Printf("Starting server at localhost:%v\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%v", port), nil))
