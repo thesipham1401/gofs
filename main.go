@@ -23,6 +23,7 @@ var port int
 
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
+	selectState := r.URL.Query().Get("select")
 	if strings.HasPrefix(path, "..") {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -54,7 +55,7 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 				items = append(items, model.Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: model.FileSize(info.Size())})
 			}
 		}
-		if err := tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite}); err != nil {
+		if err := tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite, SelectState: selectState}); err != nil {
 			log.Fatalln("[ERROR]", err)
 		}
 

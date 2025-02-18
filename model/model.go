@@ -39,9 +39,10 @@ type Item struct {
 }
 
 type FilesPageModel struct {
-	Path       Path
-	Items      []Item
-	AllowWrite bool
+	Path        Path
+	Items       []Item
+	AllowWrite  bool
+	SelectState string
 }
 
 type DeletePageModel struct {

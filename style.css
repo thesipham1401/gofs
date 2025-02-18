@@ -92,3 +92,10 @@ div.actions {
 form.upload-form {
     margin-top: 1em;
 }
+
+.select-icon svg {
+    height: 20px;
+    fill: rgba(3, 47, 98, 0.5);
+    padding-right: 0.5em;
+    vertical-align: text-top;
+}
