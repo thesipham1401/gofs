@@ -127,7 +127,11 @@ func action(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v.zip", path.Base(p)))
+			zipName := path.Base(p)
+			if zipName == "" || zipName == "." {
+				zipName = "download"
+			}
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v.zip", zipName))
 			w.Header().Set("Content-Type", "application/zip")
 			io.Copy(w, &buf)
 		}

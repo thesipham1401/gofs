@@ -5,12 +5,14 @@ Index of /{{if ne .Path "."}}{{.Path}}{{end}} - gofs
 {{define "content"}}
 <form class="index-page" method="post" action="/action">
     <div class="actions">
+        <button class="download-btn" name="action" value="download" type="submit">Download</button>
+        {{if .AllowWrite}}
         <button class="new-folder-btn" name="action" value="new-folder" type="submit">New Folder</button>
         <button class="upload-btn" name="action" value="upload" type="submit">Upload</button>
-        <button class="download-btn" name="action" value="download" type="submit">Download</button>
         <button class="rename-btn" name="action" value="rename" type="submit">Rename</button>
         <button class="arch-btn" name="action" value="archive" type="submit">Archive</button>
         <button class="del-btn" name="action" value="delete" type="submit">Delete</button>
+        {{end}}
         <input type="hidden" name="path" value="{{.Path}}">
     </div>
     <table class="paths-table">
@@ -25,9 +27,7 @@ Index of /{{if ne .Path "."}}{{.Path}}{{end}} - gofs
         <tbody>
             {{range .Items}}
             <tr>
-                {{if $.AllowWrite}}
                 <td class="td-checkbox"><input type="checkbox" name="select" value="{{.Name}}" id="{{.Name}}"></td>
-                {{end}}
                 {{if .IsDir}}
                 <td class="td-icon"><svg height="16" viewBox="0 0 14 16" width="14">
                         <path fill-rule="evenodd"
