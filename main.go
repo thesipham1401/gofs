@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -16,11 +17,42 @@ import (
 	"github.com/ndtoan96/gofs/model"
 	cp "github.com/otiai10/copy"
 	"github.com/spf13/pflag"
+
+	_ "embed"
 )
 
+// static files
+
+//go:embed templates/layout.html
+var htmlLayout string
+
+//go:embed templates/delete.html
+var htmlDelete string
+
+//go:embed templates/new-folder.html
+var htmlNewFolder string
+
+//go:embed templates/archive.html
+var htmlArchive string
+
+//go:embed templates/files.html
+var htmlFiles string
+
+//go:embed templates/upload.html
+var htmlUpload string
+
+//go:embed templates/rename.html
+var htmlRename string
+
+//go:embed style.css
+var cssStyle string
+
+// global vars
 var tmpl map[string]*template.Template
 var allowWrite bool
 var port int
+var workingDir string
+var host string
 
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
@@ -318,16 +350,20 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
+	pflag.StringVarP(&host, "host", "h", "", "Host address to listen")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
+	pflag.StringVarP(&workingDir, "dir", "d", ".", "Directory to serve")
 	pflag.Parse()
 
+	os.Chdir(workingDir)
+
 	tmpl = make(map[string]*template.Template)
-	tmpl["delete"] = template.Must(template.ParseFiles("templates/layout.html", "templates/delete.html"))
-	tmpl["new-folder"] = template.Must(template.ParseFiles("templates/layout.html", "templates/new-folder.html"))
-	tmpl["archive"] = template.Must(template.ParseFiles("templates/layout.html", "templates/archive.html"))
-	tmpl["files"] = template.Must(template.ParseFiles("templates/layout.html", "templates/files.html"))
-	tmpl["upload"] = template.Must(template.ParseFiles("templates/layout.html", "templates/upload.html"))
-	tmpl["rename"] = template.Must(template.ParseFiles("templates/layout.html", "templates/rename.html"))
+	tmpl["delete"] = template.Must(template.New("delete").Parse(htmlLayout + htmlDelete))
+	tmpl["new-folder"] = template.Must(template.New("new-folder").Parse(htmlLayout + htmlNewFolder))
+	tmpl["archive"] = template.Must(template.New("archive").Parse(htmlLayout + htmlArchive))
+	tmpl["files"] = template.Must(template.New("files").Parse(htmlLayout + htmlFiles))
+	tmpl["upload"] = template.Must(template.New("upload").Parse(htmlLayout + htmlUpload))
+	tmpl["rename"] = template.Must(template.New("rename").Parse(htmlLayout + htmlRename))
 
 	http.HandleFunc("GET /{path...}", servePath)
 	http.HandleFunc("POST /action", action)
@@ -336,7 +372,27 @@ func main() {
 	http.HandleFunc("POST /archive", archive)
 	http.HandleFunc("POST /rename", rename)
 	http.HandleFunc("POST /upload", upload)
-	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "style.css") })
-	log.Printf("Starting server at localhost:%v\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%v", port), nil))
+	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		io.WriteString(w, cssStyle)
+	})
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var globalIp string
+	for _, addr := range addrs {
+		if ip, ok := addr.(*net.IPNet); ok && !ip.IP.IsLoopback() && ip.IP.IsGlobalUnicast() {
+			globalIp = ip.IP.String()
+		}
+	}
+
+	if host == "" {
+		fmt.Printf("Listening on: http://%v:%v\n", "localhost", port)
+		fmt.Printf("              http://%v:%v\n", globalIp, port)
+		fmt.Printf("              http://%v:%v\n", "[::1]", port)
+	} else {
+		fmt.Printf("Listening on: http://%v:%v\n", host, port)
+	}
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), nil))
 }

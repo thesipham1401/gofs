@@ -15,3 +15,4 @@ limited capabilites (such as one in an e-reader device).
 - [x] Download
 - [x] Copy/Paste
 - [ ] Searching
+- [ ] Edit
