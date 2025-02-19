@@ -13,6 +13,6 @@ limited capabilites (such as one in an e-reader device).
 - [x] Rename
 - [x] Upload files
 - [x] Download
+- [x] Copy/Paste
 - [ ] Root flag
 - [ ] Searching
-- [ ] Copy/Paste
