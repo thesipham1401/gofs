@@ -14,6 +14,6 @@ limited capabilites (such as one in an e-reader device).
 - [x] Upload files
 - [x] Download
 - [x] Copy/Paste
+- [x] Edit
 - [ ] Searching
-- [ ] Edit
 - [ ] Drag and drop

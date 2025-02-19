@@ -64,6 +64,12 @@ type RenamePageModel struct {
 	OldNames []string
 }
 
+type EditPageModel struct {
+	Path     Path
+	Names    []string
+	Contents []string
+}
+
 type ParentItem struct {
 	Name string
 	Path Path

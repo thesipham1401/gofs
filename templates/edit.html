@@ -1,0 +1,54 @@
+{{define "title"}}
+Edit - gofs
+{{end}}
+
+{{define "style"}}
+<style>
+label {
+    display: inline-block;
+    background-color: rgb(58, 207, 245);
+    min-width: 20ch;
+    text-align: center;
+    color: white;
+    margin: 0.3em 0;
+    padding: 0;
+    border-radius: 2px;
+}
+
+.radio-input {
+    display: none;
+}
+
+.radio-input:checked+label {
+    background-color: rgb(67, 95, 208);
+}
+
+textarea {
+    display: none;
+}
+
+{{range $i, $name := .Names}}
+#tab{{$i}}:checked~div>#content{{$i}} {
+    display: block;
+}
+{{end}}
+
+</style>
+{{end}}
+
+{{define "content"}}
+<form action="/edit" method="post">
+    <input type="hidden" name="path" value="{{.Path}}">
+    {{range $i, $name := .Names}}
+    <input class="radio-input" type="radio" name="tabs" id="tab{{$i}}" {{if eq $i 0}}checked{{end}}>
+    <label for="tab{{$i}}">{{$name}}</label>
+    {{end}}
+    {{range $i, $name := .Names}}
+    <div>
+        <textarea name="content-{{$name}}" id="content{{$i}}" cols="120" rows="40">{{index $.Contents $i}}</textarea>
+    </div>
+    {{end}}
+    <input type="submit" value="Save" name="submit">
+    <input type="submit" value="Cancel" name="submit">
+</form>
+{{end}}

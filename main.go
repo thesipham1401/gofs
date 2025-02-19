@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"unicode/utf8"
 
 	"strings"
 
@@ -43,6 +45,9 @@ var htmlUpload string
 
 //go:embed templates/rename.html
 var htmlRename string
+
+//go:embed templates/edit.html
+var htmlEdit string
 
 //go:embed style.css
 var cssStyle string
@@ -126,6 +131,35 @@ func action(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
+	case "edit":
+		editableFiles := make([]string, 0)
+		for _, name := range names {
+			f, tmp_err := os.Open(path.Join(p, name))
+			if tmp_err == nil {
+				buffer := make([]byte, 1024)
+				bufReader := bufio.NewReader(f)
+				n, tmp_err := bufReader.Read(buffer)
+				if tmp_err == nil && utf8.Valid(buffer[:n]) {
+					editableFiles = append(editableFiles, name)
+				} else {
+					fmt.Printf("%v", tmp_err)
+				}
+				f.Close()
+			}
+		}
+		if len(editableFiles) > 0 {
+			contents := make([]string, 0)
+			for _, f := range editableFiles {
+				content, tmp_err := os.ReadFile(path.Join(p, f))
+				if tmp_err != nil {
+					log.Println("[ERROR]", tmp_err)
+				}
+				contents = append(contents, string(content))
+			}
+			err = tmpl["edit"].Execute(w, model.EditPageModel{Path: model.Path(p), Names: editableFiles, Contents: contents})
+		} else {
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
+		}
 	case "download":
 		if len(names) == 0 {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
@@ -169,19 +203,19 @@ func action(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
 			encodedNames := strings.Join(names, "!$!")
 			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
-			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
 	case "paste":
 		var cpdir *http.Cookie
 		cpdir, err = r.Cookie("cpdir")
 		if err != nil {
-			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
 		}
 		var encodedNames *http.Cookie
 		encodedNames, err = r.Cookie("cpitems")
 		if err != nil {
-			http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
 		}
 		decodedNames := strings.Split(encodedNames.Value, "!$!")
@@ -200,7 +234,7 @@ func action(w http.ResponseWriter, r *http.Request) {
 				cp.Copy(srcPath, destPath)
 			}
 		}
-		http.Redirect(w, r, r.Referer(), http.StatusMovedPermanently)
+		http.Redirect(w, r, p, http.StatusMovedPermanently)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -353,6 +387,20 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
+func edit(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	p := r.FormValue("path")
+	if r.FormValue("submit") == "Save" {
+		for k, v := range r.PostForm {
+			if strings.HasPrefix(k, "content-") {
+				name := strings.TrimPrefix(k, "content-")
+				os.WriteFile(path.Join(p, name), []byte(v[0]), 0666)
+			}
+		}
+	}
+	http.Redirect(w, r, p, http.StatusMovedPermanently)
+}
+
 func main() {
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
 	pflag.StringVarP(&host, "host", "h", "", "Host address to listen")
@@ -369,6 +417,7 @@ func main() {
 	tmpl["files"] = template.Must(template.New("files").Parse(htmlLayout + htmlFiles))
 	tmpl["upload"] = template.Must(template.New("upload").Parse(htmlLayout + htmlUpload))
 	tmpl["rename"] = template.Must(template.New("rename").Parse(htmlLayout + htmlRename))
+	tmpl["edit"] = template.Must(template.New("edit").Parse(htmlLayout + htmlEdit))
 
 	http.HandleFunc("GET /{path...}", servePath)
 	http.HandleFunc("POST /action", action)
@@ -377,6 +426,7 @@ func main() {
 	http.HandleFunc("POST /archive", archive)
 	http.HandleFunc("POST /rename", rename)
 	http.HandleFunc("POST /upload", upload)
+	http.HandleFunc("POST /edit", edit)
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		io.WriteString(w, cssStyle)
