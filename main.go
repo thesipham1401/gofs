@@ -328,6 +328,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("submit") == "Upload" {
 		for _, f := range r.MultipartForm.File["files"] {
 			filePath := path.Join(p, f.Filename)
+			_, err := os.Stat(filePath)
+			for !os.IsNotExist(err) {
+				filePath = path.Join(p, strings.TrimSuffix(path.Base(filePath), path.Ext(filePath))+"_new"+path.Ext(filePath))
+				_, err = os.Stat(filePath)
+			}
 			log.Printf("[INFO] Upload `%v`\n", filePath)
 			w, err := os.Create(filePath)
 			if err != nil {
