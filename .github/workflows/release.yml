@@ -97,8 +97,7 @@ jobs:
       - name: Retrieve tag version
         id: ref
         run: |
-          pkgver=$(cat VERSION)
-          echo "version=$pkgver" >> $GITHUB_OUTPUT
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
