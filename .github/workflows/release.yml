@@ -93,6 +93,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+    
+      - name: Retrieve tag version
+        id: ref
+        run: |
+          pkgver=$(cat VERSION)
+          echo "version=$pkgver" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -101,10 +107,10 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          tag_name: ${{ steps.ref.outputs.version }}
+          name: Release ${{ steps.ref.outputs.version }}
           body: |
             Changes in this Release
             - First Change
@@ -112,7 +118,8 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./gofs-*
+            gofs-linux-amd64
+            gofs-linux-arm64
 
 
 
