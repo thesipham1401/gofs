@@ -126,7 +126,10 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./*.tar.gz
+            ./gofs-linux-arm64.tar.gz
+            ./gofs-linux-amd64.tar.gz
+            ./main.go
+            ./README.md
 
 
 
