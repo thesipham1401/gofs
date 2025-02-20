@@ -52,13 +52,6 @@ var htmlEdit string
 //go:embed style.css
 var cssStyle string
 
-// global vars
-var tmpl map[string]*template.Template
-var allowWrite bool
-var port int
-var workingDir string
-var host string
-
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
 	selectState := r.URL.Query().Get("select")
@@ -401,11 +394,30 @@ func edit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, p, http.StatusMovedPermanently)
 }
 
+// global vars
+var tmpl map[string]*template.Template
+var allowWrite bool
+
 func main() {
+	var port int
+	var workingDir string
+	var host string
+	var tlsCert string
+	var tlsKey string
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
 	pflag.StringVarP(&host, "host", "h", "[::]", "Host address to listen")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
 	pflag.StringVarP(&workingDir, "dir", "d", ".", "Directory to serve")
+	pflag.StringVar(&tlsCert, "--tsl-cert", "", "Path to an SSL/TLS certificate to serve with HTTPS")
+	pflag.StringVar(&tlsKey, "--tsl-key", "", "Path to an SSL/TLS certificate's private key")
+
+	if tlsCert == "" && tlsKey != "" {
+		log.Fatalln("Missing SSL/TLS certificate's private key")
+	}
+	if tlsCert != "" && tlsKey == "" {
+		log.Fatalln("Missing SSL/TLS certificate")
+	}
+
 	pflag.Parse()
 
 	os.Chdir(workingDir)
@@ -442,12 +454,22 @@ func main() {
 		}
 	}
 
-	if host == "[::]" {
-		fmt.Printf("Listening on: http://%v:%v\n", "localhost", port)
-		fmt.Printf("              http://%v:%v\n", globalIp, port)
-		fmt.Printf("              http://%v:%v\n", "[::1]", port)
+	var schema string
+	if tlsCert != "" && tlsKey != "" {
+		schema = "https"
 	} else {
-		fmt.Printf("Listening on: http://%v:%v\n", host, port)
+		schema = "http"
 	}
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), nil))
+	if host == "[::]" {
+		fmt.Printf("Listening on: %v://%v:%v\n", schema, "localhost", port)
+		fmt.Printf("              %v://%v:%v\n", schema, globalIp, port)
+		fmt.Printf("              %v://%v:%v\n", schema, "[::1]", port)
+	} else {
+		fmt.Printf("Listening on: %v://%v:%v\n", schema, host, port)
+	}
+	if tlsCert == "" && tlsKey == "" {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), nil))
+	} else {
+		log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%v:%v", host, port), tlsCert, tlsKey, nil))
+	}
 }

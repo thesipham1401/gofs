@@ -17,3 +17,5 @@ limited capabilites (such as one in an e-reader device).
 - [x] Edit
 - [ ] Searching
 - [ ] Drag and drop
+- [ ] Sorting
+- [ ] Serve index.html
