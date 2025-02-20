@@ -30,7 +30,7 @@ jobs:
     - name: Archive executable (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        zip gofs-${{ matrix.os }}.zip gofs.exe
+        Compress-Archive -Path gofs.exe -DestinationPath gofs-${{ matrix.os }}.zip
 
     - name: Archive executable (Unix)
       if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
