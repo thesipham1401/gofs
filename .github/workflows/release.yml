@@ -108,14 +108,17 @@ jobs:
             - Second Change
           draft: true
           prerelease: false
+          files: |
+            ./gofs-*
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./gofs-*
+    #   - name: Upload release assets
+    #     uses: actions/upload-release-asset@v1
+    #     env:
+    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #       asset_path: ./gofs-*
+    #       asset_name: 
