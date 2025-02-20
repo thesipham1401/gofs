@@ -101,6 +101,8 @@ jobs:
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: ./
 
       - name: Create release
         id: create_release
@@ -117,8 +119,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            gofs-linux-amd64
-            gofs-linux-arm64
+            ./gofs-*
 
 
 
