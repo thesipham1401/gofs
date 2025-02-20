@@ -34,7 +34,7 @@ You can download pre-built binary in the [release page](https://github.com/ndtoa
 
 ## Usage
 ```
-Usage of C:\Users\ASUS\go\bin\gofs.exe:
+Usage of gofs:
       --tsl-cert string   Path to an SSL/TLS certificate to serve with HTTPS
       --tsl-key string    Path to an SSL/TLS certificate's private key
   -d, --dir string          Directory to serve (default ".")
