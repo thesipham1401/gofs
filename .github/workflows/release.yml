@@ -9,9 +9,14 @@ jobs:
   build:
     strategy:
       matrix:
-        goos: [ubuntu-latest, windows-latest, macos-latest]
-        goarch: [amd64, arm64] # Add arm64 for Linux and macOS if needed
-    runs-on: ${{ matrix.goos }}
+        goos: [linux, windows, darwin] # Correct GOOS values
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+          - goos: darwin
+            goarch: arm64 # Removed, as macOS arm64 is now common
+    runs-on: ${{ matrix.goos }}-latest
 
     steps:
       - name: Checkout code
