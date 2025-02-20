@@ -38,7 +38,7 @@ jobs:
         tar -czvf gofs-${{ matrix.os }}.tar.gz gofs
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: gofs-${{ matrix.os }}
         path: gofs-${{ matrix.os }}.*
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: gofs-ubuntu-latest
         path: ./artifacts
