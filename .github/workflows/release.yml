@@ -6,12 +6,11 @@ on:
       - 'v*' # Trigger on tags starting with 'v'
 
 jobs:
-  build:
+  build-windows:
     strategy:
       matrix:
-        goos: [linux, windows, darwin] # Correct GOOS values
-        goarch: [amd64, arm64]
-    runs-on: ${{ matrix.goos }}-latest
+        arch: [amd64, arm64]
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -22,29 +21,69 @@ jobs:
         with:
           go-version: '^1.23'
 
-      - name: Build project (Unix)
-        if: matrix.goos != 'windows'
+      - name: Build project
         run: |
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags="-s -w" -o gofs-${{ matrix.goos }}-${{ matrix.goarch }} ./...
-
-      - name: Build project (Windows)
-        if: matrix.goos == 'windows'
-        run: |
-          $env:GOOS = "${{ matrix.goos }}"
-          $env:GOARCH = "${{ matrix.goarch }}"
-          go build -ldflags="-s -w" -o gofs-${{ matrix.goos }}-${{ matrix.goarch }}.exe ./...
+          $env:GOOS = "windows"
+          $env:GOARCH = "${{ matrix.arch }}"
+          go build -o gofs-windows-${{ matrix.arch }}.exe
 
       - name: Upload binaries to release
         uses: actions/upload-artifact@v4
-        env:
-          EXE_EXTENSION: ${{ runner.os == 'windows' && '.exe' || '' }}
         with:
-          name: gofs-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: gofs-${{ matrix.goos }}-${{ matrix.goarch }}${{ env.EXE_EXTENSION }}
+          name: gofs-windows-${{ matrix.arch }}
+          path: gofs-windows-${{ matrix.arch }}.exe
+  build-linux:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.23'
+
+      - name: Build project
+        run: |
+          GOOS=linux GOARCH=${{ matrix.arch }} go build -o gofs-linux-${{ matrix.arch }}
+
+      - name: Upload binaries to release
+        uses: actions/upload-artifact@v4
+        with:
+          name: gofs-linux-${{ matrix.arch }}
+          path: gofs-linux-${{ matrix.arch }}
+
+  build-macos:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.23'
+
+      - name: Build project
+        run: |
+          GOOS=darwin GOARCH=${{ matrix.arch }} go build -o gofs-darwin-${{ matrix.arch }}
+
+      - name: Upload binaries to release
+        uses: actions/upload-artifact@v4
+        with:
+          name: gofs-darwin-${{ matrix.arch }}
+          path: gofs-darwin-${{ matrix.arch }}
 
   create-release:
-    needs: build
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -65,6 +104,7 @@ jobs:
         with:
           tag_name: ${{ steps.get_tag_name.outputs.tag_name }}
           release_name: Release ${{ steps.get_tag_name.outputs.tag_name }}
+          draft: true
           body: |
             Automated release by GitHub Actions.
 
