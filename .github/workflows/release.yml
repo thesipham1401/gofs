@@ -44,6 +44,8 @@ jobs:
         path: gofs-${{ matrix.os }}.*
 
   release:
+    permissions:
+        contents: write
     needs: build
     runs-on: ubuntu-latest
     steps:
