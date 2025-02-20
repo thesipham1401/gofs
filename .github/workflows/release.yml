@@ -25,7 +25,7 @@ jobs:
 
     - name: Build
       run: |
-        go build -o gofs
+        go build
 
     - name: Archive executable (Windows)
       if: startsWith(matrix.os, 'windows')
