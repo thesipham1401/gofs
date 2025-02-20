@@ -104,6 +104,9 @@ jobs:
         with:
           path: ./
 
+      - name: List files
+        run: ls -rl
+
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
