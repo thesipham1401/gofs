@@ -44,12 +44,16 @@ th {
 
 .td-name {
     min-width: 20ch;
-    max-width: 30ch;
-    text-overflow: ellipsis;
+    max-width: 50ch;
+}
+
+.cell-mtime {
+    padding-left: 1ch;
 }
 
 .td-mtime {
     min-width: 20ch;
+    padding-left: 1ch;
 }
 
 .td-size {

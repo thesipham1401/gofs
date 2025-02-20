@@ -403,7 +403,7 @@ func edit(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	pflag.BoolVarP(&allowWrite, "write", "w", false, "Allow write access")
-	pflag.StringVarP(&host, "host", "h", "", "Host address to listen")
+	pflag.StringVarP(&host, "host", "h", "[::]", "Host address to listen")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
 	pflag.StringVarP(&workingDir, "dir", "d", ".", "Directory to serve")
 	pflag.Parse()
@@ -442,7 +442,7 @@ func main() {
 		}
 	}
 
-	if host == "" {
+	if host == "[::]" {
 		fmt.Printf("Listening on: http://%v:%v\n", "localhost", port)
 		fmt.Printf("              http://%v:%v\n", globalIp, port)
 		fmt.Printf("              http://%v:%v\n", "[::1]", port)
