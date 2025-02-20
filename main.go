@@ -408,8 +408,8 @@ func main() {
 	pflag.StringVarP(&host, "host", "h", "[::]", "Host address to listen")
 	pflag.IntVarP(&port, "port", "p", 8080, "Port to listen")
 	pflag.StringVarP(&workingDir, "dir", "d", ".", "Directory to serve")
-	pflag.StringVar(&tlsCert, "--tsl-cert", "", "Path to an SSL/TLS certificate to serve with HTTPS")
-	pflag.StringVar(&tlsKey, "--tsl-key", "", "Path to an SSL/TLS certificate's private key")
+	pflag.StringVar(&tlsCert, "tsl-cert", "", "Path to an SSL/TLS certificate to serve with HTTPS")
+	pflag.StringVar(&tlsKey, "tsl-key", "", "Path to an SSL/TLS certificate's private key")
 
 	if tlsCert == "" && tlsKey != "" {
 		log.Fatalln("Missing SSL/TLS certificate's private key")
