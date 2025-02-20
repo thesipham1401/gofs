@@ -59,7 +59,7 @@ jobs:
       - name: Upload binaries to release
         uses: actions/upload-artifact@v4
         with:
-          name: gofs-linux-${{ matrix.arch }}.tar.gz
+          name: binary
           path: gofs-linux-${{ matrix.arch }}.tar.gz
 
 #   build-macos:
@@ -126,10 +126,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./gofs-linux-arm64.tar.gz
-            ./gofs-linux-amd64.tar.gz
-            ./main.go
-            ./README.md
+            ./binary/*
 
 
 
