@@ -52,15 +52,11 @@ jobs:
         run: |
           GOOS=linux GOARCH=${{ matrix.arch }} go build -o gofs-linux-${{ matrix.arch }}
       
-      - name: Archive binary
-        run: |
-          tar -czvf gofs-linux-${{ matrix.arch }}.tar.gz gofs-linux-${{ matrix.arch }}
-
       - name: Upload binaries to release
         uses: actions/upload-artifact@v4
         with:
-          name: binary
-          path: gofs-linux-${{ matrix.arch }}.tar.gz
+          name: gofs-linux-${{ matrix.arch }}
+          path: gofs-linux-${{ matrix.arch }}
 
 #   build-macos:
 #     strategy:
@@ -126,7 +122,8 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./binary/*
+            ./gofs-linux-arm64/gofs-linux-arm64
+            ./gofs-linux-amd64/gofs-linux-amd64
 
 
 
