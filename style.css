@@ -43,7 +43,9 @@ th {
 }
 
 .td-name {
-    min-width: 30ch;
+    min-width: 20ch;
+    max-width: 30ch;
+    text-overflow: ellipsis;
 }
 
 .td-mtime {
@@ -52,6 +54,7 @@ th {
 
 .td-size {
     text-align: right;
+    min-width: 10ch;
 }
 
 .td-checkbox {
