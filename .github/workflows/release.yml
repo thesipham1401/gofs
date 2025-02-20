@@ -122,8 +122,9 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./gofs-linux-amd64
-            ./gofs-linux-arm64
+            README.md
+            gofs-linux-amd64
+            gofs-linux-arm64
 
 
 
