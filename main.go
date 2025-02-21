@@ -445,12 +445,14 @@ func main() {
 
 	http.HandleFunc("GET /{path...}", servePath)
 	http.HandleFunc("POST /action", action)
-	http.HandleFunc("POST /delete", delete)
-	http.HandleFunc("POST /new-folder", newFolder)
-	http.HandleFunc("POST /archive", archive)
-	http.HandleFunc("POST /rename", rename)
-	http.HandleFunc("POST /upload", upload)
-	http.HandleFunc("POST /edit", edit)
+	if allowWrite {
+		http.HandleFunc("POST /delete", delete)
+		http.HandleFunc("POST /new-folder", newFolder)
+		http.HandleFunc("POST /archive", archive)
+		http.HandleFunc("POST /rename", rename)
+		http.HandleFunc("POST /upload", upload)
+		http.HandleFunc("POST /edit", edit)
+	}
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		io.WriteString(w, cssStyle)
