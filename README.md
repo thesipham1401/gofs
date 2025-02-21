@@ -7,6 +7,12 @@ e-reader devices).
 
 ![image](https://github.com/user-attachments/assets/290ba8b9-de77-43e3-858e-e4cb03ed189a)
 
+## Demo
+
+
+https://github.com/user-attachments/assets/5a02fe4c-2ae4-485b-8860-d60071ebee8d
+
+
 ## Install
 
 ### With go
