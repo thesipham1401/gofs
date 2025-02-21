@@ -49,8 +49,11 @@ var htmlRename string
 //go:embed templates/edit.html
 var htmlEdit string
 
-//go:embed style.css
+//go:embed static/style.css
 var cssStyle string
+
+//go:embed static/favicon.svg
+var faviconImg []byte
 
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
@@ -442,6 +445,10 @@ func main() {
 	http.HandleFunc("GET /__gofs__/style.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		io.WriteString(w, cssStyle)
+	})
+	http.HandleFunc("GET /__gofs__/favicon.svg", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Write(faviconImg)
 	})
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
