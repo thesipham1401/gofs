@@ -1,19 +1,24 @@
 # Gofs
 
 A simple static file server inspired by [dufs](https://github.com/sigoden/dufs).
-`gofs` uses zero JavaScript and so it can function properly anywhere (for example, in a browser of e-reader device).
+`gofs` uses very little JavaScript (only for drag and drop), this allows it to
+work even on browsers with limited capabilities (for example, browser on some
+e-reader devices).
 
 ![image](https://github.com/user-attachments/assets/290ba8b9-de77-43e3-858e-e4cb03ed189a)
 
 ## Install
 
 ### With go
+
 ```bash
 go install github.com/ndtoan96/gofs@latest
 ```
 
 ### Pre-built binary
-You can download pre-built binary in the [release page](https://github.com/ndtoan96/gofs/releases)
+
+You can download pre-built binary in the
+[release page](https://github.com/ndtoan96/gofs/releases)
 
 ## Features
 
@@ -27,12 +32,13 @@ You can download pre-built binary in the [release page](https://github.com/ndtoa
 - [x] Copy/Paste
 - [x] Edit
 - [x] Support https
+- [x] Drag and drop
 - [ ] Searching
-- [ ] Drag and drop
 - [ ] Sorting
 - [ ] Serve index.html
 
 ## Usage
+
 ```
 Usage of gofs:
       --tsl-cert string   Path to an SSL/TLS certificate to serve with HTTPS
@@ -44,22 +50,28 @@ Usage of gofs:
 ```
 
 ## Example
+
 Serve current directory in read-only mode
+
 ```bash
 gofs
 ```
 
-Serve current directory in write mode (allow copy, paste, rename, edit, delete,...)
+Serve current directory in write mode (allow copy, paste, rename, edit,
+delete,...)
+
 ```bash
 gofs -w
 ```
 
 Serve directory `xxx`
+
 ```bash
 gofs xxx
 ```
 
 Use a different port (default is 8080)
+
 ```bash
 gofs -p 7777
 ```

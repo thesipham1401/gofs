@@ -116,3 +116,8 @@ form.upload-form {
 .actions button {
     min-width: 8ch;
 }
+
+#drop-area {
+    min-height: 70vh;
+    min-width: 100vw;
+}

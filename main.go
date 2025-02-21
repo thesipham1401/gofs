@@ -55,6 +55,9 @@ var cssStyle string
 //go:embed static/favicon.svg
 var faviconImg []byte
 
+//go:embed static/script.js
+var scriptSource string
+
 func servePath(w http.ResponseWriter, r *http.Request) {
 	path := r.PathValue("path")
 	selectState := r.URL.Query().Get("select")
@@ -246,7 +249,9 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("submit") == "Yes" {
 		items := r.PostForm["items"]
 		for _, item := range items {
-			err := os.RemoveAll(path.Join(p, item))
+			deletePath := path.Join(p, item)
+			log.Printf("Delete `%v`\n", deletePath)
+			err := os.RemoveAll(deletePath)
 			if err != nil {
 				log.Println("[ERROR]", err)
 			}
@@ -355,6 +360,10 @@ func rename(w http.ResponseWriter, r *http.Request) {
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	p := r.FormValue("path")
+	_, err := os.Stat(p)
+	if os.IsNotExist(err) {
+		os.MkdirAll(p, 0666)
+	}
 	if r.FormValue("submit") == "Upload" {
 		for _, f := range r.MultipartForm.File["files"] {
 			filePath := path.Join(p, f.Filename)
@@ -449,6 +458,10 @@ func main() {
 	http.HandleFunc("GET /__gofs__/favicon.svg", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/svg+xml")
 		w.Write(faviconImg)
+	})
+	http.HandleFunc("GET /__gofs__/script.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		io.WriteString(w, scriptSource)
 	})
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
