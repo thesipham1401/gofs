@@ -202,6 +202,15 @@ func action(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
 			encodedNames := strings.Join(names, "!$!")
 			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
+			http.SetCookie(w, &http.Cookie{Name: "delorigin", Value: "false"})
+		}
+		http.Redirect(w, r, p, http.StatusMovedPermanently)
+	case "cut":
+		if len(names) > 0 {
+			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
+			encodedNames := strings.Join(names, "!$!")
+			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
+			http.SetCookie(w, &http.Cookie{Name: "delorigin", Value: "true"})
 		}
 		http.Redirect(w, r, p, http.StatusMovedPermanently)
 	case "paste":
@@ -213,6 +222,12 @@ func action(w http.ResponseWriter, r *http.Request) {
 		}
 		var encodedNames *http.Cookie
 		encodedNames, err = r.Cookie("cpitems")
+		if err != nil {
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
+			return
+		}
+		var delOrigin *http.Cookie
+		delOrigin, err = r.Cookie("delorigin")
 		if err != nil {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
@@ -231,6 +246,9 @@ func action(w http.ResponseWriter, r *http.Request) {
 			// Cannot copy a folder into itself
 			if !strings.HasPrefix(destPath, srcPath) {
 				cp.Copy(srcPath, destPath)
+				if delOrigin.Value == "true" {
+					os.RemoveAll(srcPath)
+				}
 			}
 		}
 		http.Redirect(w, r, p, http.StatusMovedPermanently)
