@@ -59,22 +59,23 @@ var faviconImg []byte
 var scriptSource string
 
 func servePath(w http.ResponseWriter, r *http.Request) {
-	path := r.PathValue("path")
+	p := r.PathValue("path")
 	selectState := r.URL.Query().Get("select")
-	if strings.HasPrefix(path, "..") {
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	if path == "" {
-		path = "."
+	if p == "" {
+		p = "."
 	}
-	info, err := os.Stat(path)
+	info, err := os.Stat(p)
 	if os.IsNotExist(err) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if info.IsDir() {
-		dir, err := os.ReadDir(path)
+		dir, err := os.ReadDir(p)
 		if err != nil {
 			log.Println("[ERROR]", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -92,12 +93,12 @@ func servePath(w http.ResponseWriter, r *http.Request) {
 				items = append(items, model.Item{IsDir: false, Name: e.Name(), LastModified: info.ModTime(), Size: model.FileSize(info.Size())})
 			}
 		}
-		if err := tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(path), Items: items, AllowWrite: allowWrite, SelectState: selectState}); err != nil {
+		if err := tmpl["files"].Execute(w, model.FilesPageModel{Path: model.Path(p), Items: items, AllowWrite: allowWrite, SelectState: selectState}); err != nil {
 			log.Fatalln("[ERROR]", err)
 		}
 
 	} else {
-		http.ServeFile(w, r, path)
+		http.ServeFile(w, r, p)
 	}
 }
 
@@ -105,6 +106,11 @@ func action(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	names := r.PostForm["select"]
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	var err error = nil
 	action := r.FormValue("action")
 	switch action {
@@ -264,6 +270,11 @@ func action(w http.ResponseWriter, r *http.Request) {
 func delete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	if r.FormValue("submit") == "Yes" {
 		items := r.PostForm["items"]
 		for _, item := range items {
@@ -280,6 +291,11 @@ func delete(w http.ResponseWriter, r *http.Request) {
 
 func newFolder(w http.ResponseWriter, r *http.Request) {
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	name := r.FormValue("name")
 	if r.FormValue("submit") == "Create" {
 		os.Mkdir(path.Join(p, name), 0666)
@@ -290,6 +306,11 @@ func newFolder(w http.ResponseWriter, r *http.Request) {
 func archive(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	name := r.FormValue("name")
 	name += ".zip"
 	if r.FormValue("submit") == "Archive" {
@@ -354,6 +375,11 @@ func zipFilesAndFolders(writer io.Writer, dir string, items []string) error {
 func rename(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	oldNames := make([]string, 0)
 	newNames := make([]string, 0)
 	for k, v := range r.PostForm {
@@ -378,6 +404,11 @@ func rename(w http.ResponseWriter, r *http.Request) {
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	_, err := os.Stat(p)
 	if os.IsNotExist(err) {
 		os.MkdirAll(p, 0666)
@@ -413,6 +444,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 func edit(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	p := r.FormValue("path")
+	p = path.Clean(p)
+	if strings.HasPrefix(p, "..") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	if r.FormValue("submit") == "Save" {
 		for k, v := range r.PostForm {
 			if strings.HasPrefix(k, "content-") {
