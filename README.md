@@ -35,7 +35,7 @@ You can download pre-built binary in the
 - [x] Rename
 - [x] Upload files
 - [x] Download
-- [x] Copy/Paste
+- [x] Copy/Cut/Paste
 - [x] Edit
 - [x] Support https
 - [x] Drag and drop
