@@ -13,7 +13,6 @@ import (
 	"os"
 	"path"
 	"unicode/utf8"
-	"net/url"
 
 	"strings"
 
@@ -206,24 +205,23 @@ func action(w http.ResponseWriter, r *http.Request) {
 		}
 	case "copy":
 		if len(names) > 0 {
-			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: url.QueryEscape(p)})
+			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
 			encodedNames := strings.Join(names, "!$!")
-			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: url.QueryEscape(encodedNames)})
+			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
 			http.SetCookie(w, &http.Cookie{Name: "delorigin", Value: "false"})
 		}
 		http.Redirect(w, r, p, http.StatusMovedPermanently)
 	case "cut":
 		if len(names) > 0 {
-			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: url.QueryEscape(p)})
+			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
 			encodedNames := strings.Join(names, "!$!")
-			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: url.QueryEscape(encodedNames)})
+			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
 			http.SetCookie(w, &http.Cookie{Name: "delorigin", Value: "true"})
 		}
 		http.Redirect(w, r, p, http.StatusMovedPermanently)
 	case "paste":
 		var cpdir *http.Cookie
 		cpdir, err = r.Cookie("cpdir")
-		cpdirValue, err := url.QueryUnescape(cpdir.Value)
 		if err != nil {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
@@ -234,17 +232,15 @@ func action(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
 		}
-		decodedNamesValue, err := url.QueryUnescape(encodedNames.Value)
 		var delOrigin *http.Cookie
 		delOrigin, err = r.Cookie("delorigin")
 		if err != nil {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
 		}
-
-		decodedNames := strings.Split(decodedNamesValue, "!$!")
+		decodedNames := strings.Split(encodedNames.Value, "!$!")
 		for _, name := range decodedNames {
-			srcPath := path.Join(cpdirValue, name)
+			srcPath := path.Join(cpdir.Value, name)
 			destPath := path.Join(p, name)
 			_, err = os.Stat(destPath)
 			for !os.IsNotExist(err) {
