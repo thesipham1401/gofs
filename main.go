@@ -202,8 +202,8 @@ func action(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, &http.Cookie{Name: "cpdir", Value: p})
 			encodedNames := strings.Join(names, "!$!")
 			http.SetCookie(w, &http.Cookie{Name: "cpitems", Value: string(encodedNames)})
-			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
+		http.Redirect(w, r, p, http.StatusMovedPermanently)
 	case "paste":
 		var cpdir *http.Cookie
 		cpdir, err = r.Cookie("cpdir")
