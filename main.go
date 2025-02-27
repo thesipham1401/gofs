@@ -10,10 +10,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"unicode/utf8"
-	"net/url"
 
 	"strings"
 
@@ -223,10 +223,13 @@ func action(w http.ResponseWriter, r *http.Request) {
 	case "paste":
 		var cpdir *http.Cookie
 		cpdir, err = r.Cookie("cpdir")
-		cpdirValue, err := url.QueryUnescape(cpdir.Value)
 		if err != nil {
 			http.Redirect(w, r, p, http.StatusMovedPermanently)
 			return
+		}
+		cpdirValue, err := url.QueryUnescape(cpdir.Value)
+		if err != nil {
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
 		}
 		var encodedNames *http.Cookie
 		encodedNames, err = r.Cookie("cpitems")
@@ -235,6 +238,10 @@ func action(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		decodedNamesValue, err := url.QueryUnescape(encodedNames.Value)
+		if err != nil {
+			http.Redirect(w, r, p, http.StatusMovedPermanently)
+			return
+		}
 		var delOrigin *http.Cookie
 		delOrigin, err = r.Cookie("delorigin")
 		if err != nil {
